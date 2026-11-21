@@ -1,0 +1,36 @@
+[project]
+name = "hm3"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Nikita Lenyk", email = "nikitalenyk2@gmail.com" }
+]
+requires-python = ">=3.14,<3.15"
+dependencies = [
+    "huggingface-hub>=2.4.0",
+    "numpy>=2.5.5",
+    "plotly>=7.1.0",
+    "polars>=2.1.0",
+    "tokenizers>=0.23.3",
+]
+
+[project.scripts]
+hm3 = "hm3:main"
+
+[build-system]
+requires = ["uv_build>=0.13.0,<0.14.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "black>=26.10.1",
+    "flake8>=7.5.0",
+    "ipykernel>=7.4.0",
+    "ipywidgets>=8.1.9",
+    "isort>=9.0.2",
+    "jupyterlab>=4.6.6",
+    "pre-commit>=4.7.0",
+    "pytest>=9.2.0",
+    "ty>=0.0.107",
+]
