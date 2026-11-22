@@ -1,0 +1,10 @@
+seed = 2026
+cv_sample_target = 30000
+word_max_features = 40000
+char_max_features = 60000
+min_df = 3
+logistic_regression_c = [1.0]
+linear_svm_c = [1.0]
+minimum_free_disk_gib = 5
+source_sha256 = "d55823815042eed2937e92e1018f5595915b8f7573d861048956521434f65025"
+manifest_sha256 = "1f12f2a2b312b513ace36966e9b3a011e7e3b279aeed6dd254173ac9a3d26a5d"

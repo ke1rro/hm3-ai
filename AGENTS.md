@@ -193,7 +193,7 @@ class Class:
 | Deep learning                | torch                                                                |
 | NLP encoders and tokenizers  | transformers, tokenizers; datasets as needed                         |
 | Classification evaluation    | scikit-learn metrics                                                 |
-| Explainability               | SHAP, LIME, or token attributions, if used                            |
+| Explainability               | SHAP, LIME, or token attributions, if used                           |
 | Experiment tracking          | Notebook tables and saved artifacts; external trackers if configured |
 
 Use the existing configuration instead of introducing alternative tooling.
@@ -365,10 +365,18 @@ up to five submissions per day and up to two selected final submissions.
 
 ### Test inference and submission export
 
-1. Prepare test inference and CSV export with every final candidate model. Prefer
-   performing GPU inference in the hosted environment holding its checkpoint.
-   Do not default to downloading large checkpoints to the local machine. Local
-   heavy inference requires an explicit request.
+1. Implement complete test inference and submission CSV generation in the first
+   version of every modeling experiment, including classical baselines and
+   transformers. Deliver this code together with training and evaluation; do not
+   defer submission generation to a later task. Include explicit selected-model
+   restoration, all-training-data refit when needed, ID-aligned prediction,
+   sample-submission validation, and export metadata. Provide a documented switch
+   or command that produces the CSV without repeating completed CV or holdout
+   evaluation. Expensive training and refit remain explicit execution stages;
+   Kaggle submission is never automatic. Prefer performing GPU inference in the
+   hosted environment holding its checkpoint. Do not default to downloading large
+   checkpoints to the local machine. Local heavy inference requires an explicit
+   request.
 2. Keep inference-only execution for completed checkpoints. It must restore the
    selected final or explicitly chosen best model and its tokenizer, skip training,
    and predict every test row. Run the same preprocessing and long-text policy

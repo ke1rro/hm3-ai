@@ -1,0 +1,28 @@
+model_id = "FacebookAI/xlm-roberta-base"
+revision = "e73636d4f797dec63c3081bb6ed5c7b0bb3f2089"
+seed = 2026
+train_target = 40000
+evaluation_target = 2000
+max_length = 512
+num_train_epochs = 2
+learning_rate = 0.00002
+weight_decay = 0.01
+per_device_train_batch_size = 4
+per_device_eval_batch_size = 8
+gradient_accumulation_steps = 8
+fp16 = true
+gradient_checkpointing = true
+eval_steps = 250
+save_steps = 250
+logging_steps = 50
+early_stopping_patience = 2
+minimum_free_disk_gib = 12
+source_sha256 = "d55823815042eed2937e92e1018f5595915b8f7573d861048956521434f65025"
+frozen_manifest_sha256 = "1f12f2a2b312b513ace36966e9b3a011e7e3b279aeed6dd254173ac9a3d26a5d"
+encoder_manifest_sha256 = "f37face1dcb866272bb7902e5c3bd8f2fd43b7d7e01424d048de50f1ca0a1ef5"
+
+[experiments.xlmr_head_only_40k]
+truncation_policy = "head"
+
+[experiments.xlmr_head_tail_40k]
+truncation_policy = "head_tail"
