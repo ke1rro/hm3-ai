@@ -1,0 +1,46 @@
+seed = 2026
+source_sha256 = "d55823815042eed2937e92e1018f5595915b8f7573d861048956521434f65025"
+manifest_sha256 = "1f12f2a2b312b513ace36966e9b3a011e7e3b279aeed6dd254173ac9a3d26a5d"
+output_root = "runs/rewrite_experiments"
+n_jobs = 6
+
+[inputs]
+train = "data/train.csv"
+test = "data/test.csv"
+sample = "data/sample_submission.csv"
+manifest = "data/metadata/validation_manifest.parquet"
+baseline_run = "runs/kaggle/notebook53491f866f/hm3_baseline/runs/classical_baseline/d36d5b40b9bdbc3875a8cf8c5287982736b222f710b00f21cfb24bdac28674ee"
+final_baseline = "runs/kaggle/hw3-tf-idf-baseline-final-submission/hm3_baseline/runs/classical_baseline/d36d5b40b9bdbc3875a8cf8c5287982736b222f710b00f21cfb24bdac28674ee/submissions/bounded_refit"
+xlmr_holdout = "runs/kaggle/notebookf475a1574b/hm3_xlmr/runs/xlmr_head_only_40k/57dfda5d5e0e10df1bdc79aba5ff37c7d140c53dd8b08832e6d9eb6f370b7b2a/holdout_predictions.parquet"
+xlmr_test = "runs/kaggle/hw3-xlm-r-head-only-submission/hm3_xlmr/runs/xlmr_head_only_40k/57dfda5d5e0e10df1bdc79aba5ff37c7d140c53dd8b08832e6d9eb6f370b7b2a/submissions/test_predictions.parquet"
+
+[baseline]
+word_max_features = 40000
+char_max_features = 60000
+min_df = 3
+
+[alignment]
+minimum_sentence_words = 8
+maximum_sentence_documents = 20
+minimum_shared_sentences = 2
+minimum_shared_share = 0.2
+family_folds = 3
+
+[sentence_model]
+ngram_range = [2, 5]
+min_df = 3
+max_features = 300000
+c = 1.0
+score_threshold = 0.5
+
+[gate]
+minimum_sentence_auc = 0.90
+minimum_document_auc = 0.80
+
+[offset]
+grid_minimum = -1.0
+grid_maximum = 1.0
+grid_step = 0.05
+
+[blend]
+xlmr_weight = 0.5

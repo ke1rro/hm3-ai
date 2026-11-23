@@ -1,0 +1,17 @@
+model_id = "FacebookAI/xlm-roberta-base"
+revision = "e73636d4f797dec63c3081bb6ed5c7b0bb3f2089"
+seed = 2026
+training_fold = 0
+monitor_sentences = 20000
+max_length = 96
+num_train_epochs = 1
+learning_rate = 0.00002
+weight_decay = 0.01
+warmup_ratio = 0.05
+train_batch_size = 64
+inference_batch_size = 512
+bundle_directory = "dist/kaggle_sentence_transformer"
+kaggle_dataset = "ke1rro/hw3-sentence-transformer-bundle"
+kaggle_kernel = "ke1rro/hw3-xlmr-sentence-rewrite"
+scores = "runs/kaggle/hw3-xlmr-sentence-rewrite/sentence_scores.parquet"
+score_metadata = "runs/kaggle/hw3-xlmr-sentence-rewrite/sentence_scores.json"
