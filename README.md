@@ -102,3 +102,11 @@ uv run python scripts/run_rewrite_experiments.py --stage xlmr-long-text
 The stage verifies every holdout receipt and selected-model manifest, requires identical
 recipes apart from the truncation policy and writes paired comparisons and length-group
 macro-F1 that `notebooks/05_xlmr_long_text_policies.ipynb` displays.
+
+## Report site
+
+`report.md` is published as a GitHub Pages site by `index.html`, `assets/` and
+`.github/workflows/deploy.yml`, copied unchanged from the course report template; edit only
+`report.md` and `images/`. Enable **Settings → Pages → Source: GitHub Actions** once, after
+which every push to `main` deploys the site. Preview it locally with
+`python -m http.server 8000`, because opening `index.html` from disk does not load the report.
