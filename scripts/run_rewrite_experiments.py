@@ -29,7 +29,11 @@ from hm3.decision import (  # noqa: E402
     predict_with_fusion_offset,
     select_fusion_offset,
 )
-from hm3.evaluation import classification_metrics, export_submission  # noqa: E402
+from hm3.evaluation import (  # noqa: E402
+    classification_metrics,
+    export_submission,
+    subgroup_metrics,
+)
 from hm3.families import (  # noqa: E402
     assign_families,
     assign_family_folds,
@@ -61,6 +65,7 @@ TRANSFORMER_STAGES = [
     "transformer-holdout",
     "transformer-final",
 ]
+LONG_TEXT_STAGES = ["xlmr-long-text"]
 
 
 def _peak_rss_gib() -> float:
@@ -1317,6 +1322,140 @@ def run_transformer_final(
     logger.info("Exported validated submission %s; shares %s", output, shares)
 
 
+def _restore_xlmr_holdout(output_root: Path, experiment: str) -> tuple[dict, pl.DataFrame]:
+    pointer = json.loads((output_root / "current_run.json").read_text())
+    run = output_root / pointer["run_directory"]
+    receipt = json.loads((run / "holdout_record.json").read_text())
+    identity = receipt["identity"]
+    if identity["configuration"]["experiment"] != experiment or identity["scope"] != "sampled":
+        raise ValueError(f"{run} does not hold the sampled {experiment} run")
+    if receipt["model_sha256"] != fingerprint_file(run / "selected_model/checkpoint_manifest.json"):
+        raise ValueError(f"Holdout receipt does not match the selected model in {run}")
+    for name, expected in receipt["files"].items():
+        if fingerprint_file(run / name) != expected:
+            raise ValueError(f"Saved XLM-R result changed: {run / name}")
+    training = json.loads((run / "training_complete.json").read_text())
+    record = {
+        "run_directory": str(run.relative_to(ROOT)),
+        "identity": identity,
+        "best_development_macro_f1": training["best_development_macro_f1"],
+        "best_model_checkpoint": Path(training["best_model_checkpoint"]).name,
+        "global_step": training["global_step"],
+        "epoch": training["epoch"],
+        "train_runtime_seconds": training["train_metrics"]["train_runtime"],
+    }
+    return record, pl.read_parquet(run / "holdout_predictions.parquet")
+
+
+def run_xlmr_long_text(
+    config: dict, long_text: dict, directory: Path, stages: dict[str, Path]
+) -> None:
+    """Compare XLM-R head-only and head-plus-tail truncation on the frozen holdout."""
+    assignments = pl.read_parquet(stages["families"] / "assignments.parquet")
+    holdout = _holdout_frame(config, assignments)
+    runs = {}
+    predictions = {
+        "word_char_tfidf_reference": holdout.select("id")
+        .join(
+            pl.read_parquet(stages["reference"] / "holdout_probabilities.parquet"),
+            on="id",
+            how="left",
+            maintain_order="left",
+        )["prediction"]
+        .to_numpy()
+    }
+    for name in ["original_head_only", "head_only", "head_tail"]:
+        runs[name], frame = _restore_xlmr_holdout(
+            ROOT / long_text[name]["output"], long_text[name]["experiment"]
+        )
+        aligned = holdout.select("id").join(
+            frame.select("id", "prediction"), on="id", how="left", maintain_order="left"
+        )
+        if aligned["prediction"].null_count():
+            raise ValueError(f"{name} predictions do not cover the fixed holdout")
+        predictions[name] = aligned["prediction"].to_numpy()
+    controlled = [
+        {
+            **runs[name]["identity"],
+            "configuration": {
+                key: value
+                for key, value in runs[name]["identity"]["configuration"].items()
+                if key not in {"experiment", "truncation_policy"}
+            },
+            "environment": None,
+        }
+        for name in ["head_only", "head_tail"]
+    ]
+    if controlled[0] != controlled[1]:
+        raise ValueError("Head-only and head-plus-tail runs differ beyond the truncation policy")
+    evaluations = {
+        "word_char_tfidf_reference": _evaluation(holdout, predictions["word_char_tfidf_reference"]),
+        "xlmr_head_only_original_accumulation": _evaluation(
+            holdout, predictions["original_head_only"]
+        ),
+        "xlmr_head_only": _evaluation(
+            holdout, predictions["head_only"], predictions["original_head_only"]
+        ),
+        "xlmr_head_tail": _evaluation(holdout, predictions["head_tail"], predictions["head_only"]),
+        "xlmr_head_tail_versus_tfidf": _evaluation(
+            holdout, predictions["head_tail"], predictions["word_char_tfidf_reference"]
+        ),
+    }
+    human_f1 = {
+        name: next(
+            row["f1"]
+            for row in evaluations[name]["holdout"]["per_class"]
+            if row["label"] == "human"
+        )
+        for name in ["xlmr_head_only", "xlmr_head_tail"]
+    }
+    candidate = evaluations["xlmr_head_tail"]
+    success = {
+        "minimum_gain": candidate["paired_holdout"]["difference"] >= long_text["minimum_gain"],
+        "positive_interval": candidate["paired_holdout"]["ci95_low"] > 0,
+        "family_clean_not_worse": candidate["paired_family_clean"]["difference"] >= 0,
+        "human_f1_drop_within_limit": human_f1["xlmr_head_tail"] - human_f1["xlmr_head_only"]
+        >= -long_text["maximum_human_f1_drop"],
+    }
+    success["passed"] = all(success.values())
+    lengths = pl.concat(
+        [
+            subgroup_metrics(
+                holdout.select("label", "length_bucket").with_columns(
+                    pl.Series("prediction", predictions[name])
+                ),
+                ["length_bucket"],
+            ).with_columns(pl.lit(name).alias("model"))
+            for name in [
+                "word_char_tfidf_reference",
+                "original_head_only",
+                "head_only",
+                "head_tail",
+            ]
+        ]
+    )
+    _write_parquet(lengths, directory / "length_bucket_macro_f1.parquet")
+    development = sorted(
+        (runs[name]["best_development_macro_f1"], name) for name in ["head_only", "head_tail"]
+    )
+    _write_json(
+        directory / "metrics.json",
+        {
+            "runs": runs,
+            "evaluations": evaluations,
+            "success": success,
+            "development_selected_policy": development[-1][1],
+            "same_environment": runs["head_only"]["identity"]["environment"]
+            == runs["head_tail"]["identity"]["environment"],
+        },
+    )
+    logger.info(
+        "XLM-R long-text comparison: %s; success %s",
+        {name: round(value["holdout"]["macro_f1"], 6) for name, value in evaluations.items()},
+        success,
+    )
+
+
 def main() -> None:
     """Run one explicit stage of the sentence-rewrite, offset and blend experiments."""
     logging.basicConfig(
@@ -1331,16 +1470,29 @@ def main() -> None:
     parser.add_argument(
         "--transformer-config", type=Path, default=ROOT / "config/xlmr_sentence.toml"
     )
-    parser.add_argument("--stage", choices=STAGES + TRANSFORMER_STAGES, required=True)
+    parser.add_argument(
+        "--long-text-config", type=Path, default=ROOT / "config/xlmr_long_text.toml"
+    )
+    parser.add_argument(
+        "--stage", choices=STAGES + TRANSFORMER_STAGES + LONG_TEXT_STAGES, required=True
+    )
     args = parser.parse_args()
     config = tomllib.loads(args.config.read_text())
     transformer = tomllib.loads(args.transformer_config.read_text())
+    long_text = tomllib.loads(args.long_text_config.read_text())
     root = ROOT / config["output_root"]
-    stages = {stage: root / stage.replace("-", "_") for stage in STAGES + TRANSFORMER_STAGES}
+    stages = {
+        stage: root / stage.replace("-", "_")
+        for stage in STAGES + TRANSFORMER_STAGES + LONG_TEXT_STAGES
+    }
     directory = stages[args.stage]
-    identity = _identity(
-        config if args.stage in STAGES else {**config, "transformer": transformer}, args.stage
-    )
+    if args.stage in STAGES:
+        recipe = config
+    elif args.stage in TRANSFORMER_STAGES:
+        recipe = {**config, "transformer": transformer}
+    else:
+        recipe = {**config, "long_text": long_text}
+    identity = _identity(recipe, args.stage)
     if _is_complete(directory, identity):
         logger.info("Stage %s already complete; verified outputs in %s", args.stage, directory)
         return
@@ -1368,8 +1520,10 @@ def main() -> None:
         run_char_all_train(config, directory, stages["families"])
     elif args.stage == "transformer-holdout":
         run_transformer_holdout(config, transformer, directory, stages)
-    else:
+    elif args.stage == "transformer-final":
         run_transformer_final(config, transformer, directory, stages)
+    else:
+        run_xlmr_long_text(config, long_text, directory, stages)
     files = sorted(
         str(path.relative_to(directory))
         for path in directory.rglob("*")

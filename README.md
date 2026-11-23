@@ -85,3 +85,18 @@ text. The hosted notebook verifies input fingerprints and identical sentence spl
 for one epoch and scores every eligible train and test sentence. Download its
 `sentence_scores.parquet` and `sentence_scores.json` to the paths in the configuration before
 running the evaluation stages.
+
+### XLM-R long-text policies
+
+`config/xlmr_long_text.toml` lists the downloaded output directories of the original
+head-only run and the corrected head-only and head-plus-tail runs of
+`experiments/02_xlm_roberta_kaggle.ipynb`, together with the predeclared adoption
+criteria. Download each kernel's outputs without model weights, then run:
+
+```bash
+uv run python scripts/run_rewrite_experiments.py --stage xlmr-long-text
+```
+
+The stage verifies every holdout receipt and selected-model manifest, requires identical
+recipes apart from the truncation policy and writes paired comparisons and length-group
+macro-F1 that `notebooks/05_xlmr_long_text_policies.ipynb` displays.

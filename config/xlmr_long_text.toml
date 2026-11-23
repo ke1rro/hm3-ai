@@ -1,0 +1,17 @@
+minimum_gain = 0.003
+maximum_human_f1_drop = 0.003
+
+[original_head_only]
+experiment = "xlmr_head_only_40k"
+output = "runs/kaggle/notebookf475a1574b/hm3_xlmr"
+kaggle_kernel = "ke1rro/notebookf475a1574b"
+
+[head_only]
+experiment = "xlmr_head_only_40k"
+output = "runs/kaggle/hw3-xlmr-head-only-corrected/hm3_xlmr"
+kaggle_kernel = "ke1rro/hw3-xlmr-head-only-corrected"
+
+[head_tail]
+experiment = "xlmr_head_tail_40k"
+output = "runs/kaggle/hw3-xlmr-head-tail-corrected/hm3_xlmr"
+kaggle_kernel = "ke1rro/hw3-xlmr-head-tail-corrected"
