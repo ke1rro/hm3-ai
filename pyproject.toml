@@ -46,6 +46,7 @@ dev = [
     "ipywidgets>=8.1.9",
     "isort>=9.0.2",
     "jupyterlab>=4.6.6",
+    "kaleido>=1.5.2",
     "mdformat>=1.0.0",
     "mdformat-gfm>=1.0.0",
     "mdformat-myst>=0.3.0",

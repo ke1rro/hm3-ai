@@ -110,3 +110,8 @@ macro-F1 that `notebooks/05_xlmr_long_text_policies.ipynb` displays.
 `report.md` and `images/`. Enable **Settings → Pages → Source: GitHub Actions** once, after
 which every push to `main` deploys the site. Preview it locally with
 `python -m http.server 8000`, because opening `index.html` from disk does not load the report.
+
+`uv run python scripts/build_report_figures.py` rebuilds every figure in `images/` from the
+saved experiment results. Static Plotly export needs Chrome: install it with
+`uv run kaleido_get_chrome` or point the `BROWSER_PATH` environment variable to an existing
+Chromium binary.
