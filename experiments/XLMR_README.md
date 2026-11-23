@@ -140,7 +140,9 @@ The current loader declares `accepts_loss_kwargs=False`.
 With that correction, `ke1rro/hw3-xlmr-head-only-corrected` reached holdout macro-F1
 0.811687 (early stop at step 1,000, selected step 500) and
 `ke1rro/hw3-xlmr-head-tail-corrected` reached 0.903012 (two full epochs, selected step
-2,500). The paired comparison, length groups and the early-stopping caveat are in
+2,500). `ke1rro/hw3-xlmr-head-tail-inference` restored that selected model in
+`MODE = "inference"` and exported `xlmr_head_tail_40k_sampled.csv` (Kaggle Public
+0.90166). The paired comparison, length groups and the early-stopping caveat are in
 `notebooks/05_xlmr_long_text_policies.ipynb`, produced by the `xlmr-long-text` stage of
 `scripts/run_rewrite_experiments.py` from the downloaded outputs listed in
 `config/xlmr_long_text.toml`.

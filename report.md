@@ -68,7 +68,7 @@ Facts for this section ([03_xlm_roberta](https://nbviewer.org/github/ke1rro/hm3-
 - Head-only (original loss scaling): holdout macro-F1 0.8134, fusion F1 0.719, Kaggle Public 0.81912. On documents over 1,024 words 0.710 against 0.912 for the TF-IDF baseline.
 - Corrected loss, same 40,001 documents, seed and settings; only the truncation policy differs ([05](https://nbviewer.org/github/ke1rro/hm3-ai/blob/main/notebooks/05_xlmr_long_text_policies.ipynb)):
   - Head-only: holdout 0.8117, family-clean 0.8025. Early stopping (patience 2) ended training at step 1,000 (0.8 epochs); selected step 500, development macro-F1 0.8212.
-  - Head plus tail (first 255 and last 255 tokens): holdout 0.9030, family-clean 0.9005, human F1 0.843, fusion F1 0.875. Trained the full two epochs; selected step 2,500, development macro-F1 0.9164.
+  - Head plus tail (first 255 and last 255 tokens): holdout 0.9030, family-clean 0.9005, human F1 0.843, fusion F1 0.875, Kaggle Public 0.90166. Trained the full two epochs; selected step 2,500, development macro-F1 0.9164.
   - Paired change +0.0913 [0.0874, 0.0951], family-clean +0.0980; all predeclared criteria met. Fusion documents labelled human fall from 35.8% to 9.4%.
   - Documents of at most 128 words receive identical inputs under both policies, yet gain +0.122 there, about as much as over 1,024 words (+0.127), so the two runs differ mainly in training length (figure below).
   - Against the TF-IDF reference: +0.0073 [0.0041, 0.0107] on the full holdout, but 0.833 against 0.912 on documents over 1,024 words.
@@ -108,7 +108,7 @@ Facts for this section:
 | Model | Holdout macro-F1 | Family-clean macro-F1 | Human F1 | AI F1 | Fusion F1 | Kaggle Public |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | XLM-R head-only, 40k documents | 0.8134 | 0.8044 | 0.744 | 0.977 | 0.719 | 0.81912 |
-| XLM-R head plus tail, 40k documents | 0.9030 | 0.9005 | 0.843 | 0.991 | 0.875 | — |
+| XLM-R head plus tail, 40k documents | 0.9030 | 0.9005 | 0.843 | 0.991 | 0.875 | 0.90166 |
 | Word + character TF-IDF, logistic regression | 0.8957 | 0.8937 | 0.841 | 0.989 | 0.857 | 0.90001 |
 | Plus character sentence scores | 0.9105 | 0.9083 | 0.864 | 0.990 | 0.877 | 0.90893 |
 | Plus character and XLM-R sentence scores | 0.9236 | 0.9141 | 0.884 | 0.991 | 0.896 | 0.92308 |
@@ -153,4 +153,4 @@ The TF-IDF baseline and the document-level XLM-R run on Kaggle with `experiments
 | XLM-R sentence scores only, 190,259 rows | 0.9210 | 0.9137 | — | 04 |
 | Character and XLM-R sentence scores | 0.9236 | 0.9141 | 0.92308 | 04 |
 | XLM-R head-only, corrected loss | 0.8117 | 0.8025 | — | 05 |
-| XLM-R head plus tail, corrected loss | 0.9030 | 0.9005 | — | 05 |
+| XLM-R head plus tail, corrected loss | 0.9030 | 0.9005 | 0.90166 | 05 |
