@@ -27,7 +27,6 @@ CODE_FILES = [
     "config/requirements_kaggle.in",
     "config/requirements_kaggle.txt",
     "experiments/01_baseline_kaggle.ipynb",
-    "experiments/README.md",
 ]
 SPLIT_FILES = [
     "data/metadata/validation_manifest.parquet",

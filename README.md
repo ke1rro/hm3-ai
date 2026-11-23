@@ -24,10 +24,10 @@ Keep `data/metadata/validation_manifest.parquet` and its JSON provenance togethe
 
 Results are saved under a recipe-specific `runs/classical_baseline/` directory with source and output fingerprints. Completed CV and holdout measurements are restored on rerun. A final-model checkpoint can resume test inference after interruption without repeating its fit. Unknown related-document families remain a potential validation leakage source.
 
-For Kaggle upload, use [the hosted instructions](experiments/README.md) and
-`experiments/01_baseline_kaggle.ipynb`. Build the private code and frozen-split ZIPs with
-`uv run python scripts/build_kaggle_bundles.py`. The hosted notebook runs training by
-default when Run All is selected; the research notebook keeps training disabled.
+For Kaggle upload, use `experiments/01_baseline_kaggle.ipynb`. Build the private code and
+frozen-split ZIPs with `uv run python scripts/build_kaggle_bundles.py`. The hosted notebook
+runs training by default when Run All is selected; the research notebook keeps training
+disabled.
 
 XLM-R uses a separate [GPU entry point and upload guide](experiments/XLMR_README.md).
 Build its private archives with `uv run python scripts/build_xlmr_bundles.py`.
