@@ -225,6 +225,7 @@ __marimo__/
 .DS_Store
 
 # Local competition data and generated research artifacts
+[Hh]m3*.md
 *.zip
 data/*.csv
 data/metadata/
