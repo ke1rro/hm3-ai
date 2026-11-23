@@ -135,12 +135,18 @@ Its verified holdout macro-F1 is 0.813427; the selected checkpoint is step 500.
 Transformers 5.24 inferred accumulation-normalized loss from XLM-R's forward
 kwargs, although its classification head returns mean document cross-entropy.
 A tiny CPU reproduction confirmed an eightfold scaling error at accumulation 8.
-The current loader declares `accepts_loss_kwargs=False` for future runs.
-No corrected competition training has been measured yet.
+The current loader declares `accepts_loss_kwargs=False`.
+
+With that correction, `ke1rro/hw3-xlmr-head-only-corrected` reached holdout macro-F1
+0.811687 (early stop at step 1,000, selected step 500) and
+`ke1rro/hw3-xlmr-head-tail-corrected` reached 0.903012 (two full epochs, selected step
+2,500). The paired comparison, length groups and the early-stopping caveat are in
+`notebooks/05_xlmr_long_text_policies.ipynb`, produced by the `xlmr-long-text` stage of
+`scripts/run_rewrite_experiments.py` from the downloaded outputs listed in
+`config/xlmr_long_text.toml`.
 
 Keep the historical model and its metrics unchanged. Restore or run inference for
 that model with its original code dataset and runtime; the matching local source
 archive is `dist/xlmr_kaggle/xlmr_code_legacy_57dfda5d5e0e.zip`. Its inference does
-not use training loss. Rebuild `xlmr_code.zip` before a future corrected experiment,
-initialize a new run and compare corrected head-only/head-plus-tail using the same
-frozen IDs. Do not resume the old optimizer state with changed normalization.
+not use training loss. Do not resume the old optimizer state with changed
+normalization.

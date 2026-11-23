@@ -20,6 +20,8 @@ Place the competition `train.csv` in `data/`. Raw CSVs, generated metadata, mode
 - `notebooks/04_sentence_rewrite_experiments.ipynb`: training-set document families,
   sentence rewrite scores added to the TF-IDF baseline, a fusion decision offset and a
   TF-IDF/XLM-R probability blend, all compared on the frozen holdout.
+- `notebooks/05_xlmr_long_text_policies.ipynb`: corrected XLM-R head-only versus
+  head-plus-tail truncation on the frozen holdout, by document length.
 
 The baseline notebook defaults to analysis without model training. Enable `RUN_CV` for the four-candidate, three-fold comparison, then `RUN_HOLDOUT` for the CV-selected model fitted on all development records. A separate `RUN_SUBMISSION` stage requires the local test and sample CSVs, performs an all-training-data refit and exports predictions without submitting to Kaggle. Review RAM and runtime before enabling training.
 
