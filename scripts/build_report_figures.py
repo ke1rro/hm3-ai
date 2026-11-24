@@ -17,6 +17,13 @@ logger = logging.getLogger("report_figures")
 RESULTS = ROOT / "runs/rewrite_experiments"
 CLASS_COLORS = {"human": "#2A9D8F", "ai": "#E76F51", "fusion": "#577590"}
 LAYOUT = {"template": "plotly_white", "font": {"size": 14}, "margin": {"t": 70}}
+KAGGLE_PRIVATE_MACRO_F1 = {
+    "xlmr_head_only_40k_sampled.csv": 0.81536,
+    "baseline_word_char_logreg_all_train.csv": 0.89524,
+    "xlmr_head_tail_40k_sampled.csv": 0.90067,
+    "word_char_logreg_sentence_rewrite_all_train.csv": 0.90084,
+    "word_char_logreg_xlmr_sentence_rewrite_all_train.csv": 0.91950,
+}
 
 
 def _metrics(stage: str) -> dict:
@@ -229,6 +236,82 @@ def plot_final_confusion(output: Path) -> None:
     _write(figure, output, width=760, height=600)
 
 
+def plot_model_comparison(output: Path) -> None:
+    """Plot holdout, family-clean and Kaggle private macro-F1 for every submitted model.
+
+    Args:
+        output: Destination PNG path.
+    """
+    long_text = _metrics("xlmr_long_text")["evaluations"]
+    models = [
+        (
+            "XLM-R head-only (40k)",
+            long_text["xlmr_head_only_original_accumulation"],
+            "xlmr_head_only_40k_sampled.csv",
+        ),
+        (
+            "Word + character TF-IDF",
+            long_text["word_char_tfidf_reference"],
+            "baseline_word_char_logreg_all_train.csv",
+        ),
+        (
+            "XLM-R head plus tail (40k)",
+            long_text["xlmr_head_tail"],
+            "xlmr_head_tail_40k_sampled.csv",
+        ),
+        (
+            "Plus character sentence scores",
+            _metrics("sentence_holdout")["candidate"],
+            "word_char_logreg_sentence_rewrite_all_train.csv",
+        ),
+        (
+            "Plus character and XLM-R sentence scores",
+            _metrics("transformer_holdout")["evaluations"]["candidate_char_transformer"],
+            "word_char_logreg_xlmr_sentence_rewrite_all_train.csv",
+        ),
+    ]
+    offsets = {
+        "Fixed holdout": 0.2,
+        "Family-clean holdout": 0.0,
+        "Kaggle private leaderboard": -0.2,
+    }
+    scores = pl.DataFrame(
+        [
+            {
+                "model": name,
+                "evaluation": evaluation,
+                "macro_f1": value,
+                "position": index + offsets[evaluation],
+            }
+            for index, (name, metrics, submission) in enumerate(models)
+            for evaluation, value in [
+                ("Fixed holdout", metrics["holdout"]["macro_f1"]),
+                ("Family-clean holdout", metrics["family_clean"]["macro_f1"]),
+                ("Kaggle private leaderboard", KAGGLE_PRIVATE_MACRO_F1[submission]),
+            ]
+        ]
+    )
+    figure = px.scatter(
+        scores,
+        x="macro_f1",
+        y="position",
+        color="evaluation",
+        symbol="evaluation",
+        hover_data={"model": True, "macro_f1": ":.4f", "position": False},
+        color_discrete_sequence=["#1F3A5F", "#8FB8DE", "#E9A23B"],
+        title="Macro-F1 of the submitted models on local and Kaggle evaluations",
+        labels={"macro_f1": "Macro-F1", "position": "Model", "evaluation": "Evaluation"},
+    )
+    figure.update_traces(marker={"size": 12})
+    figure.update_yaxes(
+        tickvals=list(range(len(models))),
+        ticktext=[name for name, _, _ in models],
+        showgrid=False,
+        zeroline=False,
+    )
+    _write(figure, output, width=1100, height=480)
+
+
 def main() -> None:
     """Build every report figure from saved experiment results."""
     logging.basicConfig(
@@ -250,6 +333,7 @@ def main() -> None:
     )
     plot_xlmr_length_buckets(args.output / "xlmr_macro_f1_by_length.png")
     plot_final_confusion(args.output / "final_model_confusion.png")
+    plot_model_comparison(args.output / "model_comparison_macro_f1.png")
 
 
 if __name__ == "__main__":
